@@ -7,6 +7,7 @@
 //
 
 #import <Cocoa/Cocoa.h>
+#include <os/log.h>
 
 @interface iconpongAppDelegate : NSObject <NSApplicationDelegate> {
     NSWindow *window;
@@ -20,6 +21,7 @@
     int last_rtt;
     int icmp_socket;
     int connection_state;
+    os_log_t log;
 }
 
 - (void) changeConnectionState: (int) state;

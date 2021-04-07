@@ -193,8 +193,12 @@ int64_t ustime(void) {
     ping9 = [NSImage imageNamed:@"ping_9"];
     pingError = [NSImage imageNamed:@"ping_error"];
 
+    NSString *bundleId = [[NSBundle mainBundle] bundleIdentifier];
+    log = os_log_create([bundleId cStringUsingEncoding:NSUTF8StringEncoding], "connections");
+    
     [myStatusItem setImage:pingError];
     [myStatusItem setMenu: myMenu];
+    connection_state = CONN_STATE_KO;
     [self changeConnectionState: CONN_STATE_KO];
 
     icmp_socket = -1;
@@ -211,7 +215,7 @@ int64_t ustime(void) {
     int64_t elapsed;
 
     clicks++;
-    if ((clicks % 10) == 0) {
+    if ((clicks % 20) == 0) {
         DLog(@"Sending ping\n");
 
         [self sendPingwithId:icmp_id andSeq: icmp_seq];
@@ -261,7 +265,15 @@ int64_t ustime(void) {
     } else if (state >= 5) {
         [statusMenuItem setTitle:@"Connection SLOW"];
     }
-    
+
+    if (state == CONN_STATE_KO && connection_state != CONN_STATE_KO) {
+        // lost connection
+        os_log_with_type(log, OS_LOG_TYPE_FAULT, "connection to internet down");
+    } else if (state != CONN_STATE_KO && connection_state == CONN_STATE_KO) {
+        // regained connection
+        os_log_with_type(log, OS_LOG_TYPE_FAULT, "connection to internet up");
+    }
+
     connection_state = state;
 }
 
